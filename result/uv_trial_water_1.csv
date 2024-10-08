@@ -1,0 +1,19 @@
+Complexity,Loss,Equation
+1,15.061303,-0.5998343
+2,15.061302,cube(-0.84322554)
+3,13.111886,0.0132095795 / density
+4,11.239283,tan(-0.40961957 * temperature)
+5,4.3899264,cube(inv(density * temperature))
+6,1.8571974,1.7791847 / cube(temperature * density)
+7,0.8911542,square(0.20520888 / cube(density * temperature))
+8,0.8911541,square(sqrt(0.042114455) / cube(temperature * density))
+9,0.27537286,square(0.20623483 / cube(density * temperature)) + -0.78562856
+11,0.18195376,(temperature * -0.0011537897) + square(0.20560987 / cube(density * temperature))
+12,0.11299092,(square(0.20460194 / cube(temperature * density)) - cos(temperature)) + -0.43264896
+14,0.102362104,(square(0.2048751 / cube(density * temperature)) + -0.5028232) - (0.8012816 * cos(temperature))
+15,0.10162778,((exp(cos(temperature)) * -0.63460666) + square(0.20487495 / cube(density * temperature))) + 0.20487495
+16,0.10139697,((exp(cos(temperature)) * -0.63460666) + square(sqrt(0.042114455) / cube(temperature * density))) + 0.20487495
+17,0.101058275,((exp(cos(temperature)) * (-0.63460666 - -0.017068401)) + square(0.20487495 / cube(density * temperature))) + 0.20487495
+18,0.10095451,((exp(cos(temperature)) * -0.63460666) + square(sqrt(0.042114455) / cube(temperature * density))) + (0.20487495 / 0.9366099)
+19,0.099533424,((square(0.20487495 / cube(density * temperature)) - exp(0.67450255 * cos(temperature))) + (-0.88438135 * -0.6788156)) - 0.031155663
+20,0.09917063,((square(0.20487495 / cube(density * temperature)) - exp(0.69218296 * cos(temperature))) + (-0.6788156 * -0.88438135)) - square(0.17854254)

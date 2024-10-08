@@ -1,0 +1,15 @@
+Complexity,Loss,Equation
+1,0.053714648,-0.25853893
+3,0.035487287,#NAME?
+4,0.029536165,#NAME?
+5,0.028811127,tan(-2.1486762e-6 * square(temperature))
+6,0.015069613,(square(temperature) * -1.3536364e-10) * density
+7,0.011097258,tan(-1.0965061e-10 * (density * square(temperature)))
+9,0.006759344,#NAME?
+11,0.006728017,(-0.061389394 - square((density * square(temperature)) * -1.0021372e-10)) * 1.9061406
+13,0.005479555,(32.002506 / temperature) + (-0.23303981 - square((square(temperature) * 1.3433679e-10) * density))
+15,0.004735598,(-0.24027629 - square(density * ((square(temperature) + density) * -1.1508029e-10))) - (-34.94019 / temperature)
+16,0.004731745,(-0.24027629 - square(density * ((square(temperature) + density) * -1.1508029e-10))) - tan(-34.94019 / temperature)
+17,0.004636299,(-0.25853893 - square((density * ((square(temperature) + density) * -1.1508029e-10)) - -0.030517565)) - (-34.94019 / temperature)
+18,0.004620832,(-0.25853893 - square((density * ((square(temperature) + density) * -1.1508029e-10)) - -0.030517565)) - tan(-34.94019 / temperature)
+19,0.004561557,((-0.25853893 - square((density * ((square(temperature) + density) * -1.1508029e-10)) - -0.030517565)) - (-34.94019 / temperature)) * 1.0212319
