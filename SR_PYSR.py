@@ -25,7 +25,7 @@ class PYSR_wrapper():
         self.model = None
         self.X = X
         self.y = y
-        self.NAME = 'pySR_' + substance
+        self.NAME = 'pySR_' + substance+ '_'+ time.strftime("%Y%m%d")
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -39,18 +39,18 @@ class PYSR_wrapper():
         file_in_result = os.listdir('result')
         counts = {}
         for file in file_in_result:
-            if file.startswith(self.substance):
+            if file.startswith(self.NAME):
                 counts[file] = file.split('_')[-1].split('.')[0]
         if counts:
             max_count = max([int(count) for count in counts.values()])
-            name = self.NAME + '_' + str(max_count + 1)
+            self.NAME = self.NAME + '_' + str(max_count + 1)
 
         for file_name in file_names:
             if file_name.startswith('hall_of_fame'):
                 if file_name.endswith('.csv'):
-                    os.replace(file_name, 'result/' + name + '.csv')
+                    os.replace(file_name, 'result/' + self.NAME + '.csv')
                 if file_name.endswith('.pkl'):
-                    os.replace(file_name, 'result/' + name +'.pkl')
+                    os.replace(file_name, 'result/' + self.NAME +'.pkl')
                 if file_name.endswith('.bkup'):
                     os.remove(file_name)
 
@@ -68,7 +68,9 @@ class PYSR_wrapper():
         plt.xlabel('True')
         plt.ylabel('Predicted')
         plt.title(f"True vs Predicted {self.substance} Correction Term")
-        plt.savefig(f"result/{self.substance}_{r2}.png", dpi=300, bbox_inches='tight')
+        if not os.path.exists('result/pictures'):
+            os.makedirs('result/pictures')
+        plt.savefig(f"result/pictures/{self.NAME}_{round(r2,4)}.png", dpi=300, bbox_inches='tight')
     
     def run_SR(self):
         if self.substance == 'argon':
