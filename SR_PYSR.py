@@ -35,6 +35,8 @@ class PYSR_wrapper():
         self.maxsize = MAXSIZE
         
     def organize_files(self):
+        if not os.path.exists('result'):
+            os.makedirs('result')
         file_names = os.listdir()
         file_in_result = os.listdir('result')
         counts = {}
