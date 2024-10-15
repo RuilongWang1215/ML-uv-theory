@@ -69,7 +69,7 @@ class PYSR_wrapper():
         plt.text(0.7, 0.2, f'R2: {r2:.2f}', transform=fig.transFigure)
         plt.xlabel('True')
         plt.ylabel('Predicted')
-        plt.title(f"True vs Predicted {self.substance} Correction Term")
+        #plt.title(f"True vs Predicted {self.substance} Correction Term")
         if not os.path.exists('result/pictures'):
             os.makedirs('result/pictures')
         plt.savefig(f"result/pictures/{self.NAME}_{round(r2,4)}.png", dpi=300, bbox_inches='tight')
@@ -106,6 +106,14 @@ class PYSR_wrapper():
             # ^ Define operator for SymPy as well
             elementwise_loss="loss(prediction, target) = (prediction - target)^2",
             ncycles_per_iteration = self.iteration,
+            nested_constraints={
+                "cos": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+                "sin": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+                "tan": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+                "cosh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+                "sinh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+                "exp": {"log": 0,  "exp": 0},
+            },
             timeout_in_seconds = 60*60*8,
             progress= True,
             batching = BATCHING,

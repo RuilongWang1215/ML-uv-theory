@@ -1,5 +1,7 @@
 import pandas as pd
 import numpy as np
+from sklearn.preprocessing import StandardScaler
+from sklearn.preprocessing import MinMaxScaler
 import os
 
 class data_preprocessing():
@@ -12,7 +14,7 @@ class data_preprocessing():
         # this function tackles the problem of data imbalance
         pass
     
-    def detect_outliers(data, threshold=3):
+    def detect_outliers(self, data, threshold=3):
         mean = np.mean(data['delta_phi'])
         std_dev = np.std(data['delta_phi'])
         outliers = []
@@ -50,8 +52,35 @@ class data_preprocessing():
         if save:
             data.to_csv('data/processed_data/one_hot_encoded_data.csv', index=False)
         return data
+    
+    def add_features(self, data):
+        # all features except the target variable
+        supplementary_features = pd.read_csv('data/processed_data/supplementary_features_3.csv')
+        combined_data_features = data.merge(supplementary_features, on='substance', how='left')
+        # drop the columns that are not int or float
+        combined_data_features = combined_data_features.drop(columns=['substance', 'SMILES'])
+        # put delta_phi at the end
+        combined_data_features = combined_data_features[[col for col in combined_data_features.columns if col != 'delta_phi'] + ['delta_phi']]
+        combined_data_features.to_csv('data/processed_data/combined_data_add_features_3.csv', index=False)
+        return combined_data_features
+    
+    def normalize_data(self, data, exclude_columns):
+        df = data.copy()
+        columns_to_standardize = [col for col in df.columns if col not in exclude_columns]
+        scaler = MinMaxScaler()
+        df[columns_to_standardize] = scaler.fit_transform(df[columns_to_standardize])
+        return df
+        
 
 if __name__ == '__main__':
     dp = data_preprocessing()
-    dp.combing_data()
+    #dp.combing_data()
+    data = pd.read_csv('data/processed_data/combined_data_add_features_3.csv')
+    n_before = data.shape[0]
+    #print(np.mean(data['delta_phi']))
+    data_filtered = dp.detect_outliers(data)
+    n_after = data_filtered.shape[0]
+    print(f'Number of outliers removed: {n_before - n_after}')
+    data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=['Boiling_Point', 'Molecular_Weight', 'Melting_Point'])
+    data_filtered_normalized.to_csv('data/processed_data/combined_data_add_features_3_filtered_normalized.csv', index=False)
     
