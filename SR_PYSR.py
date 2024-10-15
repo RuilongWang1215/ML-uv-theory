@@ -45,6 +45,8 @@ class PYSR_wrapper():
                 counts[file] = file.split('_')[-1].split('.')[0]
         if counts:
             max_count = max([int(count) for count in counts.values()])
+            if max_count >=1000:
+                max_count = 0
             self.NAME = self.NAME + '_' + str(max_count + 1)
 
         for file_name in file_names:

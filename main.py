@@ -7,7 +7,7 @@ from SR_PYSR import *
 ###### Put the settings here ######
 SUBSTANCE = 'combined_data_add_features_3_filtered_normalized'
 TEST_RATIO = 0.2
-ITERATION = 200
+ITERATION = 500
 MAXSIZE =30
 
 ###### Load the data ######
