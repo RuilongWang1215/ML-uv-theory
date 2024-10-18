@@ -25,7 +25,7 @@ class PYSR_wrapper():
         self.model = None
         self.X = X
         self.y = y
-        self.NAME = 'pySR_' + substance+ '_'+ time.strftime("%Y%m%d")
+        self.NAME = 'pySR_' + substance+ '_iter'+ iteration + 
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -44,8 +44,11 @@ class PYSR_wrapper():
             if file.startswith(self.NAME):
                 counts[file] = file.split('_')[-1].split('.')[0]
         if counts:
-            max_count = max([int(count) for count in counts.values()])
-            if max_count >=1000:
+            # delete counts value larger than 1000
+            counts = {k: v for k, v in counts.items() if int(v) < 1000}
+            if counts:        
+                max_count = max([int(count) for count in counts.values()])
+            else:
                 max_count = 0
             self.NAME = self.NAME + '_' + str(max_count + 1)
 
@@ -81,7 +84,12 @@ class PYSR_wrapper():
             BATCHING = True
         else:
             BATCHING = False
-        
+        custom_loss = """
+        loss(prediction, target, X) = (prediction - target)^2 
+        + 100 * (prediction - 0)^2 * (abs(X[:, 0]) < 1e-6) 
+        + 100 * (prediction - 0)^2 * (abs(X[:, 0]) > 1e6) 
+        """
+
         model = PySRRegressor(
             niterations=self.iteration,
             procs=psutil.cpu_count(),  # use all available cores
@@ -108,14 +116,14 @@ class PYSR_wrapper():
             # ^ Define operator for SymPy as well
             elementwise_loss="loss(prediction, target) = (prediction - target)^2",
             ncycles_per_iteration = self.iteration,
-            nested_constraints={
-                "cos": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-                "sin": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-                "tan": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-                "cosh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-                "sinh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-                "exp": {"log": 0,  "exp": 0},
-            },
+            #nested_constraints={
+            #    "cos": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+            #    "sin": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+            #    "tan": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+            #    "cosh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+            #    "sinh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
+            #    "exp": {"log": 0,  "exp": 0},
+            #},
             timeout_in_seconds = 60*60*8,
             progress= True,
             batching = BATCHING,
