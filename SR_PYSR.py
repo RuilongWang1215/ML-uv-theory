@@ -35,10 +35,10 @@ class PYSR_wrapper():
         self.maxsize = MAXSIZE
         
     def organize_files(self):
-        if not os.path.exists('result'):
-            os.makedirs('result')
+        if not os.path.exists('MV-uv-theory/result'):
+            os.makedirs('MV-uv-theory/result')
         file_names = os.listdir()
-        file_in_result = os.listdir('result')
+        file_in_result = os.listdir('MV-uv-theory/result')
         counts = {}
         for file in file_in_result:
             if file.startswith(self.NAME):
@@ -55,9 +55,9 @@ class PYSR_wrapper():
         for file_name in file_names:
             if file_name.startswith('hall_of_fame'):
                 if file_name.endswith('.csv'):
-                    os.replace(file_name, 'result/' + self.NAME + '.csv')
+                    os.replace(file_name, 'MV-uv-theory/result/' + self.NAME + '.csv')
                 if file_name.endswith('.pkl'):
-                    os.replace(file_name, 'result/' + self.NAME +'.pkl')
+                    os.replace(file_name, 'MV-uv-theory/result/' + self.NAME +'.pkl')
                 if file_name.endswith('.bkup'):
                     os.remove(file_name)
 

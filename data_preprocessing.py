@@ -4,7 +4,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 import os
 
-class data_preprocessing():
+class data_preprocess():
     def __init__(self):
         self.data = None
         self.X = None
@@ -70,9 +70,18 @@ class data_preprocessing():
         scaler = MinMaxScaler()
         df[columns_to_standardize] = scaler.fit_transform(df[columns_to_standardize])
         return df
+    
+    def formula_constraint(data):
+        data.loc[data['density'] < 0.001, 'delta_phi'] = 0
+        temperatures = data['temperature'].unique()
+        # Step 2: Get unique substance parameters, filter out rows with missing values
+        new_data = data[['temperature','Boiling_Point', 'Molecular_Weight', 'Melting_Point']].drop_duplicates()
+        new_data['density'] = 10000*max(data['density'])
+        new_data['delta_phi'] = 0
+        data = pd.concat([data, new_data], ignore_index=True)
+        return data
         
-
-if __name__ == '__main__':
+'''if __name__ == '__main__':
     dp = data_preprocessing()
     #dp.combing_data()
     data = pd.read_csv('data/processed_data/combined_data_add_features_3.csv')
@@ -82,5 +91,5 @@ if __name__ == '__main__':
     n_after = data_filtered.shape[0]
     print(f'Number of outliers removed: {n_before - n_after}')
     data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=['Boiling_Point', 'Molecular_Weight', 'Melting_Point'])
-    data_filtered_normalized.to_csv('data/processed_data/combined_data_add_features_3_filtered_normalized.csv', index=False)
+    data_filtered_normalized.to_csv('data/processed_data/combined_data_add_features_3_filtered_normalized.csv', index=False)'''
     
