@@ -2,40 +2,39 @@ import os
 import pandas as pd
 import numpy as np
 import json
+import time
 from dso import DeepSymbolicOptimizer
 import psutil
 
 # Set the path
-base_path = os.path.abspath(__file__)
-dir_path = os.path.dirname(base_path)
+dir_path = os.path.dirname(__file__)
 data_path = os.path.join(dir_path, 'data', 'processed_data')
 
 if not os.path.exists(dir_path+'/result_dso'):
     os.makedirs(dir_path+'/result_dso')
 if not os.path.exists(dir_path+'/result_dso/figures'):
     os.makedirs(dir_path+'/result_dso/figures')
-if not os.path.exists(dir_path+'data/dso_config'):
-    os.makedirs(dir_path+'data/dso_config')
+if not os.path.exists(dir_path+'/data/dso_config'):
+    os.makedirs(dir_path+'/data/dso_config')
 
-config_path = os.path.join(dir_path, 'data', 'dso_config')
+config_path = os.path.join(dir_path, 'data','dso_config')
 result_path = os.path.join(dir_path, 'result_dso')
 
-function_set=["add", "sub", "mul", "div", "sin", "cos", "exp", "log", "const",]
 class dso_config:
-    def __init__(self, file_name, function_set):
+    def __init__(self, file_name, function_set, n_samples = 1000000, batch_size = 5000):
         self.file_name = file_name
-        self.dataset_path = os.path.join(data_path, file_name)+'.csv'
+        self.data_path = os.path.join(data_path, f'{file_name}.csv')
         self.core = psutil.cpu_count(logical=False)
         self.config = {
             "experiment" : {
                 "logdir" : result_path,
-                "exp_name" : null,
+                "exp_name" : self.file_name+time.strftime("_%m-%d_%H%M"),
                 "seed" : 0
             },
             
             "task" : {
                 "task_type" : "regression",
-                "dataset" : self.dataset_path,
+                "dataset" : self.data_path,
                 "function_set":function_set,
                 "metric" : "inv_nrmse",
                 "metric_params" : [1.0],
@@ -47,12 +46,12 @@ class dso_config:
             },
             
             "training" : {
-                "n_samples" : 2000000,
-                "batch_size" : 1000,
+                "n_samples" : n_samples,
+                "batch_size" : batch_size,
                 "epsilon" : 0.05,
                 "baseline" : "R_e",
                 "alpha" : 0.5,
-                "b_jumpstart" : false,
+                "b_jumpstart" : False,
                 "n_cores_batch" : self.core,
                 "complexity" : "token",
                 "const_optimizer" : "scipy",
@@ -65,24 +64,24 @@ class dso_config:
             },
 
             "logging" : {
-                "save_all_iterations" : false,
-                "save_summary" : false,
-                "save_positional_entropy" : false,
-                "save_pareto_front" : true,
-                "save_cache" : false,
+                "save_all_iterations" : False,
+                "save_summary" : False,
+                "save_positional_entropy" : False,
+                "save_pareto_front" : True,
+                "save_cache" : False,
                 "save_cache_r_min" : 0.9,
                 "save_freq" : 1,
-                "save_token_count" : false,
+                "save_token_count" : False,
                 "hof" : 100
             },
 
             "state_manager": {
                 "type" : "hierarchical",
-                "observe_action" : false,
-                "observe_parent" : true,
-                "observe_sibling" : true,
-                "observe_dangling" : false,
-                "embedding" : false,
+                "observe_action" : False,
+                "observe_parent" : True,
+                "observe_sibling" : True,
+                "observe_dangling" : False,
+                "embedding" : False,
                 "embedding_size" : 8
             },
 
@@ -97,7 +96,7 @@ class dso_config:
 
             "policy_optimizer" : {
                 "policy_optimizer_type" : "pg", 
-                "summary" : false,
+                "summary" : False,
                 "learning_rate" : 0.001,
                 "optimizer" : "adam",
                 "entropy_weight" : 0.005,
@@ -105,63 +104,63 @@ class dso_config:
             },
 
             "gp_meld" : {
-                "run_gp_meld" : false,
-                "verbose" : false,
+                "run_gp_meld" : False,
+                "verbose" : False,
                 "generations" : 20,
                 "p_crossover" : 0.5,
                 "p_mutate" : 0.5,
                 "tournament_size" : 5,
                 "train_n" : 50,
                 "mutate_tree_max" : 3,
-                "parallel_eval" : false
+                "parallel_eval" : False
             },
 
             "prior": {
-                "count_constraints" : false,
+                "count_constraints" : False,
                 "relational" : {
                     "targets" : [],
                     "effectors" : [],
-                    "relationship" : null,
-                    "on" : false
+                    "relationship" : None,
+                    "on" : False
                 },
 
                 "length" : {
                     "min_" : 4,
-                    "max_" : 30,
-                    "on" : false
+                    "max_" : 35,
+                    "on" : False
                 },
 
                 "repeat" : {
                     "tokens" : "const",
-                    "min_" : null,
-                    "max_" : 3,
-                    "on" : false
+                    "min_" : None,
+                    "max_" : 5,
+                    "on" : False
                 },
-                "inverse" : {"on" : false},
-                "trig" : {"on" : false},
-                "const" : {"on" : false},
-                "no_inputs" : {"on" : false},
-                "uniform_arity" : {"on" : false},
+                "inverse" : {"on" : False},
+                "trig" : {"on" : False},
+                "const" : {"on" : False},
+                "no_inputs" : {"on" : False},
+                "uniform_arity" : {"on" : False},
                 "soft_length" : {
                     "loc" : 10,
                     "scale" : 5,
-                    "on" : false
+                    "on" : False
                 },
-                "domain_range" : {"on" : false},
+                "domain_range" : {"on" : False},
                 "language_model" : {
-                    "weight" : null,
-                    "on" : false
+                    "weight" : None,
+                    "on" : False
                 },
                 "multi_discrete" : {
-                    "dense" : false,           
-                    "ordered" : false,        
-                    "on" : false
+                    "dense" : False,           
+                    "ordered" : False,        
+                    "on" : False
                 }
             },
 
             "postprocess" : {
                 "show_count" : 5,
-                "save_plots" : true
+                "save_plots" : True
             }
             }
         

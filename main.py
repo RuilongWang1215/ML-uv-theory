@@ -2,16 +2,22 @@ import os
 import time
 import pandas as pd
 import numpy as np
-from data_preprocessing import data_preprocess
-from SR_PYSR import *
+#from data_preprocessing import data_preprocess
+
+# CREATED: 2024-10-21
+# AUTHOR: Ruilong Wang
+# PURPOSE: This script is used to run symbolic regression using DSO and PYSR
+# INPUT: file name, test ratio, iteration, maxsize
+# OUTPUT: symbolic regression model, figures, and csv files
 
 ###### Put the settings here ######
-FILE = 'combined_data_add_features_3_filtered_normalized'
+FILE = 'combined_data_add_features_3_filtered_normalized100'
 TEST_RATIO = 0.3
-ITERATION = 1000
-MAXSIZE =30
-
+ITERATION = 200
+MAXSIZE =35
+Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
 ###### Load the data ######
+
 script_dir = os.path.dirname(__file__)
 data_dir = os.path.join(script_dir, 'data', 'processed_data')
 data = pd.read_csv(os.path.join(data_dir, f'{FILE}.csv'))
@@ -19,10 +25,28 @@ data = pd.read_csv(os.path.join(data_dir, f'{FILE}.csv'))
 X = data.drop(columns=['delta_phi'])
 y = data['delta_phi']
 
+
+### Begin DSO symbolic regression ######
+if Algorithm == 'DSO':
+    from SR_DSO import *
+    ts = time.time()
+    dataset = (X, y)
+    Function_Set=["add", "sub", "mul", "div", "sin", "cos", "exp", "log", "const","tanh",
+                "inv",]
+    dso = dso_config(file_name=FILE, function_set=Function_Set, n_samples = 2700000, batch_size = 18000)
+    dso.to_json()
+    dso.run_dso()
+    te = time.time()
+    print(f'Time taken: {round((te-ts)/3600, 2)} hours')
+
+
+
 ##### Begin the symbolic regression ######
-ts = time.time()
-pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
-                    iteration =ITERATION, MAXSIZE= MAXSIZE)
-pysr.run_SR()
-te = time.time()
-print(f'Time taken: {round((te-ts)/60, 2)} minutes')
+if Algorithm == 'PYSR':
+    from SR_PYSR import *
+    ts = time.time()
+    pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
+                        iteration =ITERATION, MAXSIZE= MAXSIZE)
+    pysr.run_SR()
+    te = time.time()
+    print(f'Time taken: {round((te-ts)/60, 2)} minutes')

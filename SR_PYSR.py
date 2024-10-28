@@ -21,11 +21,10 @@ The count is the number of files with the same substance name'''
 
 class PYSR_wrapper():
     def __init__(self, substance, X, y, test_ratio=0.2, iteration=100, MAXSIZE=35):
+        self.base_path = os.path.dirname(__file__)
         self.substance = substance
         self.model = None
-        self.X = X
-        self.y = y
-        self.NAME = 'pySR_' + substance+ '_iter'+ iteration + 
+        self.NAME = 'pySR_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -33,12 +32,14 @@ class PYSR_wrapper():
         self.test_ratio = test_ratio
         self.iteration = iteration
         self.maxsize = MAXSIZE
+        self.X = X
+        self.y = y
         
     def organize_files(self):
-        if not os.path.exists('MV-uv-theory/result'):
-            os.makedirs('MV-uv-theory/result')
+        if not os.path.exists(self.base_path+'/result_pysr'):
+            os.makedirs(self.base_path+'/result_pysr')
         file_names = os.listdir()
-        file_in_result = os.listdir('MV-uv-theory/result')
+        file_in_result = os.listdir(self.base_path+'/result_pysr')
         counts = {}
         for file in file_in_result:
             if file.startswith(self.NAME):
@@ -55,15 +56,20 @@ class PYSR_wrapper():
         for file_name in file_names:
             if file_name.startswith('hall_of_fame'):
                 if file_name.endswith('.csv'):
-                    os.replace(file_name, 'MV-uv-theory/result/' + self.NAME + '.csv')
+                    os.replace(file_name, self.base_path+'/result_pysr/' + self.NAME + '.csv')
                 if file_name.endswith('.pkl'):
-                    os.replace(file_name, 'MV-uv-theory/result/' + self.NAME +'.pkl')
+                    os.replace(file_name, self.base_path+'/result_pysr/' + self.NAME +'.pkl')
                 if file_name.endswith('.bkup'):
                     os.remove(file_name)
+                    
+    def X_transform(self, X):
+        X_transformed = X.copy()  
+        X_transformed.loc[:,'density'] = X_transformed.loc[:,'density'] / (1 + X_transformed.loc[:,'density']**2)
+        return X_transformed
 
     def data_split(self):
         self.X_train, self.X_test, self.y_train, self.y_test = \
-            train_test_split(self.X, self.y, test_size=self.test_ratio, random_state=42)
+            train_test_split(self.X, self.y, test_size=self.test_ratio)
         
     def plot_regression(self):
         y_pred = self.model.predict(self.X_test)
@@ -75,21 +81,19 @@ class PYSR_wrapper():
         plt.xlabel('True')
         plt.ylabel('Predicted')
         #plt.title(f"True vs Predicted {self.substance} Correction Term")
-        if not os.path.exists('result/pictures'):
-            os.makedirs('result/pictures')
-        plt.savefig(f"result/pictures/{self.NAME}_{round(r2,4)}.png", dpi=300, bbox_inches='tight')
+        if not os.path.exists(self.base_path+'/result_pysr/pictures'):
+            os.makedirs(self.base_path+'/result_pysr/pictures')
+        plt.savefig(self.base_path+f"/result_pysr/pictures/{self.NAME}_{round(r2,4)}.png", dpi=300, bbox_inches='tight')
     
     def run_SR(self):
-        if self.substance == 'argon':
-            BATCHING = True
-        else:
-            BATCHING = False
-        custom_loss = """
+        self.data_split()
+        density = self.X_train['density']
+        weights = density/(10**(-16)+density**1.005)
+        """custom_loss = 
         loss(prediction, target, X) = (prediction - target)^2 
         + 100 * (prediction - 0)^2 * (abs(X[:, 0]) < 1e-6) 
         + 100 * (prediction - 0)^2 * (abs(X[:, 0]) > 1e6) 
         """
-
         model = PySRRegressor(
             niterations=self.iteration,
             procs=psutil.cpu_count(),  # use all available cores
@@ -101,35 +105,29 @@ class PYSR_wrapper():
                 "sin",
                 "exp",
                 "tan",
-                "inv(x) = 1/x",
+                #"inv(x) = 1/x",
                 "sqrt",
                 "log",
                 "square",
                 "cube",
                 "sinh(x) = (exp(x) - exp(-x))/2",
                 "cosh(x) = (exp(x) + exp(-x))/2",
-                # ^ Custom operator (julia syntax)
             ],
-            extra_sympy_mappings={"inv": lambda x: 1 / x,
-                                    "sinh": lambda x: (sp.exp(x) - sp.exp(-x)) / 2,
-                                        "cosh": lambda x: (sp.exp(x) + sp.exp(-x)) / 2},
+            extra_sympy_mappings={#"inv": lambda x: 1 / x,
+                                "sinh": lambda x: (sp.exp(x) - sp.exp(-x)) / 2,
+                                "cosh": lambda x: (sp.exp(x) + sp.exp(-x)) / 2,
+                                },
             # ^ Define operator for SymPy as well
-            elementwise_loss="loss(prediction, target) = (prediction - target)^2",
+            weights=weights,
+            elementwise_loss="loss(prediction, target, w) = (w*prediction - target)^2",
             ncycles_per_iteration = self.iteration,
-            #nested_constraints={
-            #    "cos": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-            #    "sin": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-            #    "tan": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-            #    "cosh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-            #    "sinh": {"sin": 0, "cos": 0, "tan": 0, "cosh": 0, "sinh": 0},
-            #    "exp": {"log": 0,  "exp": 0},
-            #},
+            
             timeout_in_seconds = 60*60*8,
+            model_selection='accuracy',
             progress= True,
-            batching = BATCHING,
+            batching = True,
             bumper = True,)  
-        self.data_split()
-        model.fit(self.X_train, self.y_train)
+        model.fit(self.X_train, self.y_train, weights=weights)
         self.model = model
         self.plot_regression()
         self.organize_files()
