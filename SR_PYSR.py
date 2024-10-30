@@ -61,6 +61,9 @@ class PYSR_wrapper():
                     os.replace(file_name, self.base_path+'/result_pysr/' + self.NAME +'.pkl')
                 if file_name.endswith('.bkup'):
                     os.remove(file_name)
+        # create a txt file to store the description of the training results, in result_pysr
+        # every time the model is trained, the description will be updated in the same file
+        # write self.NAME: message
                     
     def X_transform(self, X):
         X_transformed = X.copy()  
@@ -87,13 +90,8 @@ class PYSR_wrapper():
     
     def run_SR(self):
         self.data_split()
-        density = self.X_train['density']
-        weights = density/(10**(-16)+density**1.005)
-        """custom_loss = 
-        loss(prediction, target, X) = (prediction - target)^2 
-        + 100 * (prediction - 0)^2 * (abs(X[:, 0]) < 1e-6) 
-        + 100 * (prediction - 0)^2 * (abs(X[:, 0]) > 1e6) 
-        """
+        #density = self.X_train['density']
+        #weights = density/(10**(-16)+density**1.005)
         model = PySRRegressor(
             niterations=self.iteration,
             procs=psutil.cpu_count(),  # use all available cores
@@ -105,7 +103,6 @@ class PYSR_wrapper():
                 "sin",
                 "exp",
                 "tan",
-                #"inv(x) = 1/x",
                 "sqrt",
                 "log",
                 "square",
@@ -117,17 +114,23 @@ class PYSR_wrapper():
                                 "sinh": lambda x: (sp.exp(x) - sp.exp(-x)) / 2,
                                 "cosh": lambda x: (sp.exp(x) + sp.exp(-x)) / 2,
                                 },
-            # ^ Define operator for SymPy as well
-            weights=weights,
-            elementwise_loss="loss(prediction, target, w) = (w*prediction - target)^2",
+            complexity_of_operators={"sin": 3, "cos": 3, "tan":3
+                                     ,"sinh":3,"cosh":3},
+            elementwise_loss="loss(prediction, target) = (prediction - target)^2",
             ncycles_per_iteration = self.iteration,
-            
             timeout_in_seconds = 60*60*8,
-            model_selection='accuracy',
+            model_selection='best',
+            #nested_constraints={
+            #    "tan": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
+            #    "sin": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
+            #    "cos": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
+            #    "exp": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
+            #    "log": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
+            #},
             progress= True,
             batching = True,
             bumper = True,)  
-        model.fit(self.X_train, self.y_train, weights=weights)
+        model.fit(self.X_train, self.y_train)
         self.model = model
         self.plot_regression()
         self.organize_files()

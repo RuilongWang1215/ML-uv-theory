@@ -1,1 +1,3 @@
-combined_data_3.csv: combined data of substances: ['water', 'methane', 'argon']
+all_3.csv: combined data of substances: ['water', 'methane', 'argon']
+ exclude_water.csv: combined data of substances: ['water', 'methane', 'argon']
+ water.csv: data of water

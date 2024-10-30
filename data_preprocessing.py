@@ -36,25 +36,48 @@ class data_preprocess():
         data_without_outliers = data[~data['delta_phi'].isin(outliers)]
         return data_without_outliers
     
-    def combing_data(self):
+    def combing_data(self, mode = 'all'):
         path = base_dir+'/data'
         file_names = os.listdir(path)
         # filter out the files that are not starting with 'real_ufrac'
         substances = [file_name.split('_')[-1].split('.')[0] for file_name in file_names if file_name.startswith('real_ufrac')]
-        data_total = pd.DataFrame()
-        for substance in substances:
-            data = pd.read_csv(f'{path}/real_ufrac_{substance}.csv')
-            data['substance'] = substance
-            data_total = pd.concat([data_total, data[['density', 'temperature', 'delta_phi','substance']]], axis=0)
-        if not os.path.exists(f'{path}/processed_data'):
-            os.mkdir(f'{path}/processed_data')
-        data_total.to_csv(f'{path}/processed_data/combined_data_{len(substances)}.csv', index=False)
-        # create a txt file to store the description of the data
-        # combined_data_{len(substances)}.csv: combined data of all (list of substances)
-        with open(f'{path}/processed_data/data_description.txt', 'w') as f:
-            f.write(f'combined_data_{len(substances)}.csv: combined data of substances: {substances}')
-        print('Data combined and saved')
-        self.one_hot_encoding(data_total, save=True)
+        if mode == 'all':
+            data_total = pd.DataFrame()
+            for substance in substances:
+                data = pd.read_csv(f'{path}/real_ufrac_{substance}.csv')
+                data['substance'] = substance
+                data_total = pd.concat([data_total, data[['density', 'temperature', 'delta_phi','substance']]], axis=0)
+            if not os.path.exists(f'{path}/processed_data'):
+                os.mkdir(f'{path}/processed_data')
+            data_total.to_csv(f'{path}/processed_data/all_{len(substances)}.csv', index=False)
+            # create a txt file to store the description of the data
+            # combined_data_{len(substances)}.csv: combined data of all (list of substances)
+            with open(f'{path}/processed_data/data_description.txt', 'w') as f:
+                f.write(f'all_{len(substances)}.csv: combined data of substances: {substances}')
+            print('Data combined and saved')
+            
+        if mode == 'separate':
+            # create a combined data excluding water
+            data_total = pd.DataFrame()
+            data_water = pd.DataFrame()
+            for substance in substances:
+                if substance != 'water':
+                    data = pd.read_csv(f'{path}/real_ufrac_{substance}.csv')
+                    data['substance'] = substance
+                    data_total = pd.concat([data_total, data[['density', 'temperature', 'delta_phi','substance']]], axis=0)
+                else:
+                    data = pd.read_csv(f'{path}/real_ufrac_{substance}.csv')
+                    data['substance'] = substance
+                    data_water = pd.concat([data_water, data[['density', 'temperature', 'delta_phi','substance']]], axis=0)
+            if not os.path.exists(f'{path}/processed_data'):
+                os.mkdir(f'{path}/processed_data')
+            data_total.to_csv(f'{path}/processed_data/exclude_water.csv', index=False)
+            data_water.to_csv(f'{path}/processed_data/water.csv', index=False)
+            # write the description of the data in the existing txt file, append the new data
+            with open(f'{path}/processed_data/data_description.txt', 'a') as f:
+                f.write(f'\n exclude_water.csv: combined data of substances: {substances}')
+                f.write(f'\n water.csv: data of water')
+            print('Data combined and saved')
         return data_total
     
     def one_hot_encoding(self, data, save=False):
@@ -65,8 +88,7 @@ class data_preprocess():
         return data
     
     def feature_engineering(self):
-        supplementary_features = pd.DataFrame(columns=['substance', 'SMILES', 'TPSA', 'Molecular_Weight',
-                                                       'LogP','BertzCT'])
+        supplementary_features = pd.DataFrame()
         substances_dict = {'methane':'C',
                            'argon':'[Ar]',
                            'water':'O',}
@@ -81,16 +103,14 @@ class data_preprocess():
             Ipc = Descriptors.Ipc(mol)
             HallKierAlpha = Descriptors.HallKierAlpha(mol)
             NumHAcceptors = Descriptors.NumHAcceptors(mol)
-            NumAmideBonds = Descriptors.NumAmideBonds(mol)
             supplementary_features = pd.concat([supplementary_features, pd.DataFrame([[substance, smiles, TPSA, Molecular_Weight, LogP, BertzCT,
-                                                                                       NumAtoms, BalabanJ, Ipc, HallKierAlpha, NumHAcceptors, NumAmideBonds]],
+                                                                                       NumAtoms, BalabanJ, Ipc, HallKierAlpha, NumHAcceptors]],
                                                                                      columns=['substance', 'SMILES', 'TPSA', 'MW', 'LogP', 'BertzCT',
-                                                                                              'NumAtoms', 'BalabanJ', 'Ipc', 'HallKierAlpha', 'NumHAcceptors', 'NumAmideBonds',
+                                                                                              'NumAtoms', 'BalabanJ', 'Ipc', 'HallKierAlpha', 'NumHAcceptors', 
                                                                                               ])], axis=0)
             print(f'{substance} done')
             # drop the columns that are all 0
         supplementary_features = supplementary_features.loc[:, (supplementary_features != 0).any(axis=0)]
-        supplementary_features = supplementary_features.select_dtypes(include=['int64', 'float64'])
         supplementary_features = supplementary_features.loc[:, (supplementary_features != supplementary_features.iloc[0]).any()]
         number_of_features = supplementary_features.shape[1]
         supplementary_features.to_csv(base_dir+f'/data/processed_data/supplementary_features_{int(number_of_features)}.csv', index=False)
@@ -98,12 +118,10 @@ class data_preprocess():
     
     def add_features(self, data, supplementary_features):
         combined_data_features = data.merge(supplementary_features, on='substance', how='left')
-        # drop the columns that are not int or float
         combined_data_features = combined_data_features.drop(columns=['substance', 'SMILES'])
         number_of_features = combined_data_features.shape[1]-1
-        # put delta_phi at the end
         combined_data_features = combined_data_features[[col for col in combined_data_features.columns if col != 'delta_phi'] + ['delta_phi']]
-        combined_data_features.to_csv(base_dir+f'/data/processed_data/all_add_features_{str(number_of_features)}.csv', index=False)
+        #combined_data_features.to_csv(base_dir+f'/data/processed_data/all_add_features_{str(number_of_features)}.csv', index=False)
         return combined_data_features
     
     def normalize_data(self, data, exclude_columns):
@@ -119,14 +137,41 @@ class data_preprocess():
         
 if __name__ == '__main__':
     dp = data_preprocess()
-    supplement_features= dp.feature_engineering()
-    data = dp.combing_data()
+    #supplement_features= dp.feature_engineering()
+    supplement_features = pd.read_csv(base_dir+'/data/processed_data/supplementary_features_6.csv')
+    #data = dp.combing_data(mode = 'separate')
+    data = pd.read_csv(base_dir+'/data/processed_data/exclude_water.csv')
     data = dp.add_features(data, supplement_features)
-    n_before = data.shape[0]
+    '''n_before = data.shape[0]
     data_filtered = dp.detect_outliers(data)
     n_after = data_filtered.shape[0]
-    print(f'Number of outliers removed: {n_before - n_after}')
-    #data_filtered.to_csv(base_dir+'/data/processed_data/combined_data_add_features_3_filtered.csv', index=False)
-    data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=['delta_phi'])
-    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/all_add_features_filtered_normalized.csv', index=False)
+    print(f'Number of outliers removed: {n_before - n_after}')'''
+    # calculate the person correlation coefficient of the features (excluding delta_phi), and remove the one of the features that are highly correlated
+    X = data.drop(columns=['delta_phi'])
+    corr_matrix = X.corr().abs()
+    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+    to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
+    data_filtered = data.drop(columns=to_drop)
+    print(f'Number of features removed due to high correlation: {len(to_drop)}')
+    # exclude_columns = columns except density and temperature
+    exclude_columns = data_filtered.columns.difference(['density', 'temperature'])
+    data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=exclude_columns)
+    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/exclude_water_add_features_normalized.csv', index=False)
+    
+    water = pd.read_csv(base_dir+'/data/processed_data/water.csv')
+    water = dp.add_features(water, supplement_features)
+    len_before = water.shape[0]
+    water_filtered = dp.detect_outliers(water)
+    len_after = water_filtered.shape[0]
+    print(f'Number of outliers removed in water: {len_before - len_after}')
+    X_water = water_filtered.drop(columns=['delta_phi'])
+    corr_matrix_water = X_water.corr().abs()
+    upper_water = corr_matrix_water.where(np.triu(np.ones(corr_matrix_water.shape), k=1).astype(np.bool))
+    to_drop_water = [column for column in upper_water.columns if any(upper_water[column] > 0.95)]
+    water_filtered = water_filtered.drop(columns=to_drop_water)
+    print(f'Number of features removed due to high correlation in water: {len(to_drop_water)}')
+    exclude_columns_water = water_filtered.columns.difference(['density', 'temperature'])
+    water_filtered_normalized = dp.normalize_data(water_filtered, exclude_columns=exclude_columns_water )
+    water_filtered_normalized.to_csv(base_dir+'/data/processed_data/water_add_features_normalized.csv', index=False)
+    
     

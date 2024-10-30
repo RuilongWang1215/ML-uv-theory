@@ -11,20 +11,25 @@ import numpy as np
 # OUTPUT: symbolic regression model, figures, and csv files
 
 ###### Put the settings here ######
-FILE = 'combined_data_add_features_3_filtered_normalized100'
-TEST_RATIO = 0.3
-ITERATION = 200
+FILE = 'exclude_water_add_features_normalized'
+TEST_RATIO = 0.2
+ITERATION = 500
 MAXSIZE =35
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
 ###### Load the data ######
+message = (
+    f"TEST RATIO: {TEST_RATIO}, ITERATION: {ITERATION}, MAX SIZE: {MAXSIZE}\n"
+    f"Algorithm: {Algorithm} (with nested constraints)"
+)
 
+            
 script_dir = os.path.dirname(__file__)
 data_dir = os.path.join(script_dir, 'data', 'processed_data')
 data = pd.read_csv(os.path.join(data_dir, f'{FILE}.csv'))
-#data = data_preprocess.formula_constraint(data)
+data = data.dropna(axis=1)
 X = data.drop(columns=['delta_phi'])
 y = data['delta_phi']
-
+print(f"length of X: {len(X)}") 
 
 ### Begin DSO symbolic regression ######
 if Algorithm == 'DSO':
@@ -44,9 +49,12 @@ if Algorithm == 'DSO':
 ##### Begin the symbolic regression ######
 if Algorithm == 'PYSR':
     from SR_PYSR import *
-    ts = time.time()
-    pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
-                        iteration =ITERATION, MAXSIZE= MAXSIZE)
-    pysr.run_SR()
-    te = time.time()
-    print(f'Time taken: {round((te-ts)/60, 2)} minutes')
+    # run the SR for 5 times
+    for i in range(5):
+        ts = time.time()
+        pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
+                            iteration =ITERATION, MAXSIZE= MAXSIZE)
+        pysr.run_SR()
+        te = time.time()
+        print(f'Time taken: {round((te-ts)/60, 2)} minutes')
+        print(f"For the {i+1}th run")
