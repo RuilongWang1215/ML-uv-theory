@@ -43,14 +43,15 @@ class Restriction:
         self.model = model
         self.equation = model.sympy()  # Removed simplify for speed
         self.rho, self.T = symbols('density temperature')
+        self.complexity = model.get_best()['complexity']
         
     def helmholtz_energy_restriction(self):
         # Restriction 1: lim_{ρ -> 0} (δφ * ρ) = 0
         equal_1 = self.equation * self.rho
         restriction_1 = equal_1.subs(self.rho, 0) == 0
-
         # Restriction 2: lim_{T -> ∞} δφ is not infinite (not equal to oo or -oo)
         limit_value = limit(self.equation, self.T, oo)
+        # or is_finite
         restriction_2 = limit_value != oo and limit_value != -oo
         return restriction_1, restriction_2
     
@@ -117,17 +118,21 @@ class Restriction:
 if __name__ == '__main__':
     ts = time.time()
     base_path = os.path.dirname(__file__)
-    results = pd.read_csv(f'{base_path}/result_pysr/restriction_results.csv')
-    calculated = results['Filename'].values
+    #results = pd.read_csv(f'{base_path}/result_pysr/restriction_results.csv')
+    #calculated = results['Filename'].values
     SUBSTANCES = os.listdir(f'{base_path}/result_pysr')
     # SUBSTANCES is the name that before . and begin with pySR
     SUBSTANCES = [substance.split('.')[0] for substance in SUBSTANCES if substance.endswith('.pkl')]
-    SUBSTANCES = [substance for substance in SUBSTANCES if substance not in calculated]
+    #SUBSTANCES = [substance for substance in SUBSTANCES if substance not in calculated]
     fulfills = {}
+    equations = []
+    complexitys = []
     for idx, substance in enumerate(SUBSTANCES):
         print(f"Checking restrictions for {substance} ({idx}/{len(SUBSTANCES)})")
         model = PySRRegressor.from_file(f'{base_path}/result_pysr/{substance}.pkl')
         r = Restriction(model)
+        equations.append(r.equation)
+        complexitys.append(r.complexity)
         
         try:
             # Run restriction_check with a timeout
@@ -146,8 +151,13 @@ if __name__ == '__main__':
     # Output results
     print(f"Fulfills restrictions: {fulfills}")
     # Save the results to a CSV file
-    df = pd.DataFrame(fulfills.items(), columns=['Filename', 'Fulfills'])
-    df = pd.concat([results, df], ignore_index=True, axis=0)
+    df = pd.DataFrame({
+        "Filename": SUBSTANCES,
+        "Equation": equations,
+        "Complexity": complexitys,
+        "Fulfillment": [fulfills.get(substance, False) for substance in SUBSTANCES]
+    })
+    #df = pd.concat([results, df], ignore_index=True, axis=0)
     df.to_csv(f'{base_path}/result_pysr/restriction_results.csv', index=False)
     print("Done!")
 

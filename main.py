@@ -11,8 +11,8 @@ import numpy as np
 # OUTPUT: symbolic regression model, figures, and csv files
 
 ###### Put the settings here ######
-FILE = 'exclude_water_add_features_normalized'
-TEST_RATIO = 0.2
+FILE = 'water_add_features_filtered_normalized'
+TEST_RATIO = 0.1
 ITERATION = 500
 MAXSIZE =35
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'

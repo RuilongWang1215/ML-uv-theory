@@ -132,7 +132,7 @@ class PYSR_wrapper():
             bumper = True,)  
         model.fit(self.X_train, self.y_train)
         self.model = model
-        self.plot_regression()
+        #self.plot_regression()
         self.organize_files()
         print(f"Model for {self.substance} has been saved")
         return model
