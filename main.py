@@ -11,8 +11,8 @@ import numpy as np
 # OUTPUT: symbolic regression model, figures, and csv files
 
 ###### Put the settings here ######
-FILE = 'water_add_features_filtered_normalized'
-TEST_RATIO = 0.1
+FILE = 'all_add_features_filtered'
+TEST_RATIO = 0.2
 ITERATION = 500
 MAXSIZE =35
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
@@ -50,7 +50,7 @@ if Algorithm == 'DSO':
 if Algorithm == 'PYSR':
     from SR_PYSR import *
     # run the SR for 5 times
-    for i in range(5):
+    for i in range(2):
         ts = time.time()
         pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
                             iteration =ITERATION, MAXSIZE= MAXSIZE)

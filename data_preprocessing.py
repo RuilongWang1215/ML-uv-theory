@@ -5,6 +5,8 @@ from sklearn.preprocessing import MinMaxScaler
 from rdkit import Chem
 from rdkit.Chem import Descriptors
 import os
+# OPTION OF NORMALIZATION: rescale_to_custom_range, normalize_data (reduced temperature)
+# OPTION OF FEATURE ENGINEERING: add_features, one_hot_encoding, rdkit
 
 base_dir =  os.path.dirname(__file__)
 class data_preprocess():
@@ -24,6 +26,9 @@ class data_preprocess():
         # Apply the rescaling formula
         rescaled_data = (data - data_min)*(max_val - min_val) / (data_max - data_min)  + min_val
         return rescaled_data
+    
+    def normalize_data(self, data):
+        pass
     
     def detect_outliers(self, data, threshold=3):
         mean = np.mean(data['delta_phi'])
@@ -103,9 +108,9 @@ class data_preprocess():
             Ipc = Descriptors.Ipc(mol)
             HallKierAlpha = Descriptors.HallKierAlpha(mol)
             NumHAcceptors = Descriptors.NumHAcceptors(mol)
-            supplementary_features = pd.concat([supplementary_features, pd.DataFrame([[substance, smiles, TPSA, Molecular_Weight, LogP, BertzCT,
+            supplementary_features = pd.concat([supplementary_features, pd.DataFrame([[substance, TPSA, Molecular_Weight, LogP, BertzCT,
                                                                                        NumAtoms, BalabanJ, Ipc, HallKierAlpha, NumHAcceptors]],
-                                                                                     columns=['substance', 'SMILES', 'TPSA', 'MW', 'LogP', 'BertzCT',
+                                                                                     columns=['substance', 'TPSA', 'MW', 'LogP', 'BertzCT',
                                                                                               'NumAtoms', 'BalabanJ', 'Ipc', 'HallKierAlpha', 'NumHAcceptors', 
                                                                                               ])], axis=0)
             print(f'{substance} done')
@@ -116,9 +121,22 @@ class data_preprocess():
         supplementary_features.to_csv(base_dir+f'/data/processed_data/supplementary_features_{int(number_of_features)}.csv', index=False)
         return supplementary_features
     
+    def feature_engineering_manual(self):
+        data = {
+            "substance": ["argon", "methane", "water"],
+            "nu": [13.24120923, 13.67421233, 20],
+            "Sigma / Angstrom": [3.4013733, 3.73761057, 3.00143591],
+            "Epsilon/kB / Kelvin": [122.95766323, 158.69985269, 398.302260],
+            "Kappa_AB": [0, 0, 0.0588848599],
+            "epsilon_AB": [0, 0, 2699.63068]}
+        df = pd.DataFrame(data)
+        csv_path = base_dir+"/data/processed_data/supplementary_features_manual.csv"
+        df.to_csv(csv_path, index=False)
+        return df
+    
     def add_features(self, data, supplementary_features):
         combined_data_features = data.merge(supplementary_features, on='substance', how='left')
-        combined_data_features = combined_data_features.drop(columns=['substance', 'SMILES'])
+        combined_data_features = combined_data_features.drop(columns=['substance'])
         number_of_features = combined_data_features.shape[1]-1
         combined_data_features = combined_data_features[[col for col in combined_data_features.columns if col != 'delta_phi'] + ['delta_phi']]
         #combined_data_features.to_csv(base_dir+f'/data/processed_data/all_add_features_{str(number_of_features)}.csv', index=False)
@@ -134,44 +152,37 @@ class data_preprocess():
         #df.to_csv(base_dir+'/data/processed_data/all_add_features_filtered_normalized.csv', index=False)
         return df
     
+    def feature_selection(self,data):
+        X = data.drop(columns=['delta_phi'])
+        corr_matrix = X.corr().abs()
+        upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
+        to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
+        data_filtered = data.drop(columns=to_drop)
+        print(f'Number of features removed due to high correlation: {len(to_drop)}')
+        return data_filtered
+        
+    
         
 if __name__ == '__main__':
     dp = data_preprocess()
-    #supplement_features= dp.feature_engineering()
-    supplement_features = pd.read_csv(base_dir+'/data/processed_data/supplementary_features_6.csv')
+    supplement_features= dp.feature_engineering_manual()
+    #supplement_features = pd.read_csv(base_dir+'/data/processed_data/supplementary_features_6.csv')
     #data = dp.combing_data(mode = 'separate')
-    data = pd.read_csv(base_dir+'/data/processed_data/exclude_water.csv')
+    data = pd.read_csv(base_dir+'/data/processed_data/all_3.csv')
     data = dp.add_features(data, supplement_features)
-    '''n_before = data.shape[0]
+    data.to_csv(base_dir+'/data/processed_data/all_add_features_manual.csv', index=False)
+    '''
+    n_before = data.shape[0]
     data_filtered = dp.detect_outliers(data)
     n_after = data_filtered.shape[0]
-    print(f'Number of outliers removed: {n_before - n_after}')'''
-    # calculate the person correlation coefficient of the features (excluding delta_phi), and remove the one of the features that are highly correlated
-    X = data.drop(columns=['delta_phi'])
-    corr_matrix = X.corr().abs()
-    upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
-    to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
-    data_filtered = data.drop(columns=to_drop)
-    print(f'Number of features removed due to high correlation: {len(to_drop)}')
-    # exclude_columns = columns except density and temperature
+    print(f'Number of outliers removed: {n_before - n_after}')
+
+    data_filtered = dp.feature_selection(data_filtered)
+    
     exclude_columns = data_filtered.columns.difference(['density', 'temperature'])
     data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=exclude_columns)
-    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/exclude_water_add_features_normalized.csv', index=False)
     
-    water = pd.read_csv(base_dir+'/data/processed_data/water.csv')
-    water = dp.add_features(water, supplement_features)
-    len_before = water.shape[0]
-    water_filtered = dp.detect_outliers(water)
-    len_after = water_filtered.shape[0]
-    print(f'Number of outliers removed in water: {len_before - len_after}')
-    X_water = water_filtered.drop(columns=['delta_phi'])
-    corr_matrix_water = X_water.corr().abs()
-    upper_water = corr_matrix_water.where(np.triu(np.ones(corr_matrix_water.shape), k=1).astype(np.bool))
-    to_drop_water = [column for column in upper_water.columns if any(upper_water[column] > 0.95)]
-    water_filtered = water_filtered.drop(columns=to_drop_water)
-    print(f'Number of features removed due to high correlation in water: {len(to_drop_water)}')
-    exclude_columns_water = water_filtered.columns.difference(['density', 'temperature'])
-    water_filtered_normalized = dp.normalize_data(water_filtered, exclude_columns=exclude_columns_water )
-    water_filtered_normalized.to_csv(base_dir+'/data/processed_data/water_add_features_normalized.csv', index=False)
+    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/exclude_water_add_features_normalized.csv', index=False)
+    '''
     
     
