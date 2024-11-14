@@ -3,8 +3,12 @@ import numpy as np
 from sklearn.preprocessing import StandardScaler
 from sklearn.preprocessing import MinMaxScaler
 from rdkit import Chem
+import seaborn as sns
+import matplotlib.pyplot as plt
 from rdkit.Chem import Descriptors
 import os
+from feos.si import *
+from matplotlib import style
 # OPTION OF NORMALIZATION: rescale_to_custom_range, normalize_data (reduced temperature)
 # OPTION OF FEATURE ENGINEERING: add_features, one_hot_encoding, rdkit
 
@@ -26,9 +30,18 @@ class data_preprocess():
         # Apply the rescaling formula
         rescaled_data = (data - data_min)*(max_val - min_val) / (data_max - data_min)  + min_val
         return rescaled_data
-    
-    def normalize_data(self, data):
-        pass
+
+    def compute_dimensionless(self, df):
+        # Constants
+        NA = 6.02214e23  # Avogadro's number in mol^-1
+        k_B = 1.3806e-23  # Boltzmann constant in J/K
+        angstrom_to_meter = 1e-10  # Conversion factor from angstrom to meter
+        required_columns = ['density', 'temperature', 'Epsilon', 'Sigma']
+        if not all(col in df.columns for col in required_columns):
+            raise ValueError(f"DataFrame must contain the following columns: {required_columns}")
+        df['density'] = df['density']*(df['Sigma']*angstrom_to_meter)**3*NA
+        df['temperature'] = df['temperature']/(df['Epsilon'])
+        return df
     
     def detect_outliers(self, data, threshold=3):
         mean = np.mean(data['delta_phi'])
@@ -41,7 +54,7 @@ class data_preprocess():
         data_without_outliers = data[~data['delta_phi'].isin(outliers)]
         return data_without_outliers
     
-    def combing_data(self, mode = 'all'):
+    def combing_data(self, sample_ratio = None, mode = 'all'):
         path = base_dir+'/data'
         file_names = os.listdir(path)
         # filter out the files that are not starting with 'real_ufrac'
@@ -50,6 +63,8 @@ class data_preprocess():
             data_total = pd.DataFrame()
             for substance in substances:
                 data = pd.read_csv(f'{path}/real_ufrac_{substance}.csv')
+                if sample_ratio and substance not in ['water']:
+                    data = data.sample(frac=sample_ratio)
                 data['substance'] = substance
                 data_total = pd.concat([data_total, data[['density', 'temperature', 'delta_phi','substance']]], axis=0)
             if not os.path.exists(f'{path}/processed_data'):
@@ -125,8 +140,8 @@ class data_preprocess():
         data = {
             "substance": ["argon", "methane", "water"],
             "nu": [13.24120923, 13.67421233, 20],
-            "Sigma / Angstrom": [3.4013733, 3.73761057, 3.00143591],
-            "Epsilon/kB / Kelvin": [122.95766323, 158.69985269, 398.302260],
+            "Sigma": [3.4013733, 3.73761057, 3.00143591],
+            "Epsilon": [122.95766323, 158.69985269, 398.302260],
             "Kappa_AB": [0, 0, 0.0588848599],
             "epsilon_AB": [0, 0, 2699.63068]}
         df = pd.DataFrame(data)
@@ -155,6 +170,15 @@ class data_preprocess():
     def feature_selection(self,data):
         X = data.drop(columns=['delta_phi'])
         corr_matrix = X.corr().abs()
+        # plot the correlation matrix, show the columns name and keep 2 decimal places
+        style.use('ggplot')
+        sns.set_style('whitegrid')
+        plt.subplots(figsize = (8,6))
+        sns.heatmap(corr_matrix, annot=True, fmt=".2f", cmap='coolwarm')
+        plt.title('Correlation Matrix')
+        plt.tight_layout()
+        plt.savefig(base_dir+'/data/processed_data/correlation_matrix.png')
+        plt.show()
         upper = corr_matrix.where(np.triu(np.ones(corr_matrix.shape), k=1).astype(np.bool))
         to_drop = [column for column in upper.columns if any(upper[column] > 0.95)]
         data_filtered = data.drop(columns=to_drop)
@@ -166,23 +190,23 @@ class data_preprocess():
 if __name__ == '__main__':
     dp = data_preprocess()
     supplement_features= dp.feature_engineering_manual()
-    #supplement_features = pd.read_csv(base_dir+'/data/processed_data/supplementary_features_6.csv')
-    #data = dp.combing_data(mode = 'separate')
-    data = pd.read_csv(base_dir+'/data/processed_data/all_3.csv')
+    data = dp.combing_data(mode = 'all')
+    #data = pd.read_csv(base_dir+'/data/processed_data/all_3.csv')
     data = dp.add_features(data, supplement_features)
-    data.to_csv(base_dir+'/data/processed_data/all_add_features_manual.csv', index=False)
-    '''
+    #data.to_csv(base_dir+'/data/processed_data/all_add_features_manual.csv', index=False)
+    
     n_before = data.shape[0]
     data_filtered = dp.detect_outliers(data)
     n_after = data_filtered.shape[0]
     print(f'Number of outliers removed: {n_before - n_after}')
-
-    data_filtered = dp.feature_selection(data_filtered)
     
+    data_normalized = dp.compute_dimensionless(data_filtered)
+    data_filtered_normalized = dp.feature_selection(data_normalized)
+    '''
     exclude_columns = data_filtered.columns.difference(['density', 'temperature'])
     data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=exclude_columns)
-    
-    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/exclude_water_add_features_normalized.csv', index=False)
-    '''
+     '''
+    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/all_add_features_manual_normalized_filtered.csv', index=False)
+
     
     

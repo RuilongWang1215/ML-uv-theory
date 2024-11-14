@@ -1,4 +1,4 @@
-substance,nu,Sigma / Angstrom,Epsilon/kB / Kelvin,Kappa_AB,epsilon_AB
+substance,nu,Sigma,Epsilon,Kappa_AB,epsilon_AB
 argon,13.24120923,3.4013733,122.95766323,0.0,0.0
 methane,13.67421233,3.73761057,158.69985269,0.0,0.0
 water,20.0,3.00143591,398.30226,0.0588848599,2699.63068

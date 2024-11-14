@@ -1,24 +1,11 @@
 Filename,Equation,Complexity,Fulfillment
-pySR_all_add_features_filtered_normalized_wc_iter500_1151,sinh(sin(log(temperature + log(2*MW + sqrt(density**3))**2/TPSA**2))**9 - 0.35867468/sqrt(density)),27,False
-pySR_all_add_features_filtered_normalized_iter500_1343,-tan(0.0010283891*(temperature - log(density))*sqrt(2.98388920274129e-7*LogP*(-TPSA + density)**4 + MW + 0.771271817448488*temperature)),27,True
-pySR_all_add_features_filtered_normalized_iter500_1458,1.1303637*(1.1876218 - temperature)/(LogP*(TPSA + cos(log(LogP + 1.32141679666104*density*temperature)))),21,True
-pySR_all_add_features_filtered_normalized_wc_iter500_1100,tan(0.11253421*(1.419277 - temperature*(7.68869860587792e-15*LogP**4*density**4 + sqrt(temperature))/TPSA)/LogP),26,True
-pySR_water_add_features_filtered_normalized_iter500_0054,-0.020651202183038*temperature + 0.8878436*exp(2.2526490025946*cos(HallKierAlpha*(-MW + 1.4552718*density + temperature))/sqrt(density)) - 0.145436745637092,27,True
-pySR_exclude_water_add_features_normalized_iter500_1812,-tan(0.594245504821029*sqrt(exp(-sqrt(density))) - log(sqrt(sin(sqrt(log(temperature*(MW + density/(1.9848928 - 2.23967646887949*density/MW**2)))))))**3),33,False
-pySR_all_add_features_filtered_normalized_iter500_1253,tan(tan(-0.015254521*temperature*0.594568524045745*(5.27745057833634e-5*density*(-TPSA + density) + 1)**3) + 0.080460526/MW),25,False
-pySR_all_add_features_filtered_iter500_1727,(0.59252316*LogP**2 - sin(log(0.0029894337*density*exp(LogP) + temperature)) - 0.95121527)**3 - 0.0918966,22,True
-pySR_exclude_water_add_features_normalized_iter500_1703,-1.63626653518779e-6*temperature**2*sqrt(MW**2 + 0.506171079958493*exp(sqrt(density))) - 0.297670892093937*sqrt(1/density),19,True
-pySR_water_add_features_filtered_normalized_iter500_0031,-0.021386437*temperature + sinh(sin(0.026352936*density - 0.190027802981799*sin(sqrt(temperature)))) + temperature*exp(-0.06456719*temperature)/density,30,False
-pySR_all_add_features_filtered_normalized_wc_iter500_1125,sinh(temperature*(-0.00014888936*temperature - 0.00014888936*log(105721.511915584*(-0.00223590883321441 + (0.245079898497709*MW + 1)**2/density**2)**6) - 0.000216896748964656*density/TPSA)),28,False
-pySR_all_add_features_filtered_normalized_wc_iter500_0007,exp(-cos(log(density))**4/MW**4)*tan(tan(0.0074323616*density*(0.104128460549946 - 0.0208564445464904*temperature/TPSA) - 0.0074323616*temperature)),32,False
-pySR_exclude_water_add_features_normalized_iter500_1834,(-1.0770614656584e-6*MW - 7.57642222098546e-7*sqrt(exp(sqrt(density))))*(1.1410177*temperature**2 + (density/MW)**(9/2)) - 0.43318090395904*exp(-2*sqrt(density/MW)),32,False
-pySR_all_add_features_filtered_iter500_1514,tan(tan((density*exp(2.51725*LogP) + temperature**2)*(-2.9781722e-6)/exp(1.60607159455744*LogP**2))) + 0.08767497,26,True
-pySR_all_add_features_filtered_iter500_2125,3.67483085472592e-9*(-sqrt(density)*sin(MW - 0.9328978) - temperature)**3,16,False
-pySR_all_add_features_filtered_iter500_1703,tan(-7.70665670262735e-9*(density/(MW**2 - 0.000418950067226124*(MW + TPSA)**4) + temperature/(exp(sin(LogP)**2) - 1*(-0.07737146)))**3),32,False
-pySR_exclude_water_add_features_normalized_iter500_1727,temperature**2*(-9.455398e-7*MW - 9.455398e-7*sqrt(exp(sqrt(MW)) + exp(sqrt(density)))) - 0.31503737/sqrt(density),20,True
-pySR_all_add_features_filtered_normalized_wc_iter500_1219,tan(temperature*exp(0.000192400507464201*density**2/TPSA**2)*(-0.008542614) + 0.07533879/MW),18,True
-pySR_exclude_water_add_features_normalized_iter500_1749,-2.70233178532659e-7*(0.521952295752368*MW + 0.521952295752368*density + temperature)**3 - 0.55195343/(1.9158839 + density**2/MW),20,False
-pySR_water_add_features_filtered_normalized_iter500_2354,-0.021236548*temperature + (TPSA/(((density**3 + temperature)/1.5323435)) + 0.18813784)**3 + exp(-7.6355181/density),21,False
-pySR_all_add_features_filtered_iter500_1837,1.3974370738911e-10*(-0.0004653728*MW*density*(LogP + 0.12975854) - temperature)**3*log(MW)**3,17,True
-pySR_all_add_features_filtered_normalized_iter500_1319,-0.77170291131142*temperature**2/(LogP - TPSA + (TPSA - density)/(exp(log(MW)**(1/8)) - 0.038530383))**2 - 0.96181011147804/(density + 2.303187),29,True
-pySR_all_add_features_filtered_normalized_iter500_1431,tan((-temperature + log(density))/(104.336542251451 + (sqrt(MW) - density)/TPSA)) + 0.00496129419296702*temperature/MW,24,False
+pySR_all_add_features_manual_sampled_normalized_iter500_0214,temperature**3/(-Sigma + sin(log(nu + (density + 0.050542768)**2)**3) + 0.25130412)**3 + 0.017358396*log(density),23,True
+pySR_all_add_features_manual_normalized_iter500_1451,1.07484499541926e-8*density**3*(-0.36000234 + temperature/(1.5191836*density))**3*(-nu**2 + temperature)**3 - temperature**2/(nu/(density**3)),25,False
+pySR_all_add_features_manual_normalized_iter500_1621,-tan(2.052097e-5*nu**3*(temperature**2 - 2.28621425025181*cos(log(density) - sin(exp(Sigma)) + 0.22960478) + 0.32826197)/cos(density)),34,False
+pySR_all_add_features_manual_sampled_normalized_iter500_0200,(0.048223045*temperature**2/cos(0.23101789*nu - sqrt(density**3/temperature**3)) + 0.057969607)/cos(sinh(density)),27,False
+pySR_all_add_features_manual_sampled_normalized_iter500_0147,0.126133860372467*density - 0.126133860372467*cosh(temperature - sin(density**9 - exp(Sigma))/(exp(density**3*sqrt(nu)/temperature) - 0.24731004)),31,False
+pySR_all_add_features_manual_sampled_normalized_iter500_0131,tan((0.0688216086603928*temperature**2)/(density**2 - 1*1.7977865) - sin(tan(nu**3)/((nu*exp(density)/temperature)))**3),30,True
+pySR_all_add_features_manual_normalized_iter500_1602,-0.044732854*temperature*(density**3*(temperature - 0.32598716)**(3/2) - density + temperature + (-density - sqrt(nu) + nu/Sigma)**4),26,True
+pySR_all_add_features_manual_sampled_normalized_iter500_0227,-0.224795116916927*(0.880065546127279*density**3 + 0.692206358621454*temperature - 1)**2 - 0.1077105*tan(sqrt(nu + temperature - exp(density) + 0.71808714)),24,False
+pySR_all_add_features_manual_normalized_iter500_1516,-0.0137211652977941*(density**3 + temperature)**3 - 0.19554488/(density**2 - nu + exp(Sigma)),17,False
+pySR_all_add_features_manual_normalized_iter500_1543,sinh((density**3 + tan(sqrt(-density + nu)))*(-0.07560778*temperature**2 + 0.07560778*cos(log(density)))),24,False

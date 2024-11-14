@@ -2,6 +2,7 @@ import os
 import time
 import pandas as pd
 import numpy as np
+from data_preprocessing import data_preprocess
 #from data_preprocessing import data_preprocess
 
 # CREATED: 2024-10-21
@@ -11,25 +12,36 @@ import numpy as np
 # OUTPUT: symbolic regression model, figures, and csv files
 
 ###### Put the settings here ######
-FILE = 'all_add_features_filtered'
-TEST_RATIO = 0.2
+FILE = 'all_add_features_manual_sampled_normalized'
+TEST_RATIO = 0.1
 ITERATION = 500
 MAXSIZE =35
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
+Loadingfrom = 'data_preprocess' # 'file' or 'data_preprocess'
 ###### Load the data ######
-message = (
-    f"TEST RATIO: {TEST_RATIO}, ITERATION: {ITERATION}, MAX SIZE: {MAXSIZE}\n"
-    f"Algorithm: {Algorithm} (with nested constraints)"
-)
 
-            
-script_dir = os.path.dirname(__file__)
-data_dir = os.path.join(script_dir, 'data', 'processed_data')
-data = pd.read_csv(os.path.join(data_dir, f'{FILE}.csv'))
-data = data.dropna(axis=1)
-X = data.drop(columns=['delta_phi'])
-y = data['delta_phi']
-print(f"length of X: {len(X)}") 
+# Load data from file
+if Loadingfrom == 'file':
+    script_dir = os.path.dirname(__file__)
+    data_dir = os.path.join(script_dir, 'data', 'processed_data')
+    data = pd.read_csv(os.path.join(data_dir, f'{FILE}.csv'))
+    data = data.dropna(axis=1)
+    X = data.drop(columns=['delta_phi'])
+    y = data['delta_phi']
+    print(f"length of X: {len(X)}") 
+
+# Load data from data_preprocess
+if Loadingfrom == 'data_preprocess':
+    dp = data_preprocess()
+    supplement_features= dp.feature_engineering_manual()
+    data = dp.combing_data(mode = 'all', sample_ratio=0.7)
+    data = dp.add_features(data, supplement_features)
+    data = dp.compute_dimensionless(data)
+    data = dp.feature_selection(data)
+    data =data.dropna(axis=1)
+    X = data.drop(columns=['delta_phi'])
+    y = data['delta_phi']
+    print(f"length of X: {len(X)}")
 
 ### Begin DSO symbolic regression ######
 if Algorithm == 'DSO':
@@ -50,7 +62,7 @@ if Algorithm == 'DSO':
 if Algorithm == 'PYSR':
     from SR_PYSR import *
     # run the SR for 5 times
-    for i in range(2):
+    for i in range(5):
         ts = time.time()
         pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
                             iteration =ITERATION, MAXSIZE= MAXSIZE)
