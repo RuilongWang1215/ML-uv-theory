@@ -62,11 +62,15 @@ if Algorithm == 'DSO':
 if Algorithm == 'PYSR':
     from SR_PYSR import *
     # run the SR for 5 times
-    for i in range(5):
+    run_time = 5
+    while run_time > 0:
         ts = time.time()
         pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
                             iteration =ITERATION, MAXSIZE= MAXSIZE)
-        pysr.run_SR()
+        fulfillment = pysr.run_SR()
         te = time.time()
         print(f'Time taken: {round((te-ts)/60, 2)} minutes')
-        print(f"For the {i+1}th run")
+        if fulfillment == True:
+            run_time =run_time -1
+        else:
+            run_time = run_time
