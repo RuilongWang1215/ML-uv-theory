@@ -118,12 +118,12 @@ class Restriction:
 if __name__ == '__main__':
     ts = time.time()
     base_path = os.path.dirname(__file__)
-    #results = pd.read_csv(f'{base_path}/result_pysr/restriction_results.csv')
-    #calculated = results['Filename'].values
+    results = pd.read_csv(f'{base_path}/result_pysr/restriction_results.csv')
+    calculated = results['Filename'].values
     SUBSTANCES = os.listdir(f'{base_path}/result_pysr')
     # SUBSTANCES is the name that before . and begin with pySR
     SUBSTANCES = [substance.split('.')[0] for substance in SUBSTANCES if substance.endswith('.pkl')]
-    #SUBSTANCES = [substance for substance in SUBSTANCES if substance not in calculated]
+    SUBSTANCES = [substance for substance in SUBSTANCES if substance not in calculated]
     fulfills = {}
     equations = []
     complexitys = []

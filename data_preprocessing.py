@@ -41,6 +41,12 @@ class data_preprocess():
             raise ValueError(f"DataFrame must contain the following columns: {required_columns}")
         df['density'] = df['density']*(df['Sigma']*angstrom_to_meter)**3*NA
         df['temperature'] = df['temperature']/(df['Epsilon'])
+        df['nu'] = df['nu']/12
+        df['Epsilon'] = df['Epsilon']/max(df['Epsilon'])
+        df['Kappa_AB'] = df['Kappa_AB']/max(df['Kappa_AB'])
+        df['epsilon_AB'] = df['epsilon_AB']/max(df['epsilon_AB'])
+        df['Sigma'] = df['Sigma']/max(df['Sigma'])
+        
         return df
     
     def detect_outliers(self, data, threshold=3):
@@ -193,20 +199,20 @@ if __name__ == '__main__':
     data = dp.combing_data(mode = 'all')
     #data = pd.read_csv(base_dir+'/data/processed_data/all_3.csv')
     data = dp.add_features(data, supplement_features)
-    #data.to_csv(base_dir+'/data/processed_data/all_add_features_manual.csv', index=False)
+    data.to_csv(base_dir+'/data/processed_data/all_add_features_manual.csv', index=False)
     
-    n_before = data.shape[0]
-    data_filtered = dp.detect_outliers(data)
-    n_after = data_filtered.shape[0]
-    print(f'Number of outliers removed: {n_before - n_after}')
+    #n_before = data.shape[0]
+    #data_filtered = dp.detect_outliers(data)
+    #n_after = data_filtered.shape[0]
+    #print(f'Number of outliers removed: {n_before - n_after}')
     
-    data_normalized = dp.compute_dimensionless(data_filtered)
-    data_filtered_normalized = dp.feature_selection(data_normalized)
+    data_normalized = dp.compute_dimensionless(data)
+    data_filtered = dp.feature_selection(data_normalized)
     '''
     exclude_columns = data_filtered.columns.difference(['density', 'temperature'])
     data_filtered_normalized = dp.normalize_data(data_filtered, exclude_columns=exclude_columns)
      '''
-    data_filtered_normalized.to_csv(base_dir+'/data/processed_data/all_add_features_manual_normalized_filtered.csv', index=False)
+    data_filtered.to_csv(base_dir+'/data/processed_data/all_add_features_manual_normalized_n_filtered.csv', index=False)
 
     
     
