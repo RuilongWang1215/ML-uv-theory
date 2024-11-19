@@ -18,6 +18,7 @@ ITERATION = 500
 MAXSIZE =35
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
 Loadingfrom = 'file' # 'file' or 'data_preprocess'
+stepwise = True
 ###### Load the data ######
 
 # Load data from file
@@ -61,16 +62,53 @@ if Algorithm == 'DSO':
 ##### Begin the symbolic regression ######
 if Algorithm == 'PYSR':
     from SR_PYSR import *
-    # run the SR for 5 times
-    run_time = 5
-    while run_time > 0:
+    run_time = 4
+    if not stepwise:
+        while run_time > 0:
+            ts = time.time()
+            pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
+                                iteration =ITERATION, MAXSIZE= MAXSIZE)
+            fulfillment, model = pysr.run_SR()
+            te = time.time()
+            print(f'Time taken: {round((te-ts)/60, 2)} minutes')
+            if fulfillment == True:
+                run_time =run_time -1
+            else:
+                run_time = run_time
+                
+    if stepwise:
         ts = time.time()
-        pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
-                            iteration =ITERATION, MAXSIZE= MAXSIZE)
-        fulfillment = pysr.run_SR()
+        nu_value, count = np.unique(data['nu'], return_counts=True)
+        nu_count = dict(zip(nu_value, count))
+        nu_count = dict(sorted(nu_count.items(), key=lambda x: x[1], reverse=False))
+        nu_value = list(nu_count.keys())
+        count = list(nu_count.values())
+        
+        data_first = data[data['nu'] != nu_value[0]]
+        data_second = data[data['nu'] == nu_value[0]]
+        print(f"length of data_first: {len(data_first)}", f"length of data_second: {len(data_second)}")
+        X_first = data_first.drop(columns=['delta_phi'])
+        y_first = data_first['delta_phi']
+        X_second = data_second.drop(columns=['delta_phi'])
+        y_second_0 = data_second['delta_phi']
+        save_path = os.path.join(script_dir, 'result_pysr')
+        while run_time > 0:
+            FILE_name = FILE + '_'+str(run_time)+'_'
+            pysr_1 = PYSR_wrapper(substance=FILE_name, X=X_first, y=y_first, test_ratio=TEST_RATIO, 
+                                iteration =ITERATION, MAXSIZE= MAXSIZE)
+            fulfillment_1, model_1 = pysr_1.run_SR()
+            fulfillment_2 = False
+            while fulfillment_1 and not fulfillment_2:
+                y_second = model_1.predict(X_second)-y_second_0
+                pysr_2 = PYSR_wrapper(substance=FILE_name, X=X_second, y=y_second, test_ratio=TEST_RATIO, 
+                                iteration =ITERATION, MAXSIZE= 10)
+                fulfillment_2, model_2 = pysr_2.run_SR()
+                if fulfillment_2 == True:
+                    run_time =run_time -1
+                else:
+                    run_time = run_time
+            else:
+                run_time = run_time
         te = time.time()
         print(f'Time taken: {round((te-ts)/60, 2)} minutes')
-        if fulfillment == True:
-            run_time =run_time -1
-        else:
-            run_time = run_time
+        

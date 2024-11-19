@@ -24,7 +24,7 @@ class PYSR_wrapper():
         self.base_path = os.path.dirname(__file__)
         self.substance = substance
         self.model = None
-        self.NAME = 'pySR_w_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
+        self.NAME = 'pySR_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -102,9 +102,9 @@ class PYSR_wrapper():
     
     def run_SR(self):
         self.data_split()
-        unique_nu, counts = np.unique(self.X_train['nu'], return_counts=True)
-        weights_dict = {nu: 1 / count for nu, count in zip(unique_nu, counts)}
-        weights = np.array([weights_dict[nu] for nu in self.X_train['nu']])
+        #unique_nu, counts = np.unique(self.X_train['nu'], return_counts=True)
+        #weights_dict = {nu: 1 / count for nu, count in zip(unique_nu, counts)}
+        #weights = np.array([weights_dict[nu] for nu in self.X_train['nu']])
         #density = self.X_train['density']
         #weights = density/(10**(-16)+density**1.005)
         model = PySRRegressor(
@@ -131,7 +131,8 @@ class PYSR_wrapper():
                                 },
             complexity_of_operators={"sin": 3, "cos": 3, "tan":3
                                      ,"sinh":3,"cosh":3},
-            elementwise_loss="loss(prediction, target, w) = w*(prediction - target)^2",
+            #elementwise_loss="loss(prediction, target, w) = w*(prediction - target)^2",
+            elementwise_loss="loss(prediction, target) = (prediction - target)^2",
             #custom_loss=self.weighted_loss,
             ncycles_per_iteration = self.iteration,
             timeout_in_seconds = 60*60*8,
@@ -146,12 +147,12 @@ class PYSR_wrapper():
             progress= True,
             batching = True,
             bumper = True,)  
-        model.fit(self.X_train, self.y_train, weights=weights)
+        model.fit(self.X_train, self.y_train)
         self.model = model
         #self.plot_regression()
         fulfillment= self.organize_files()
         print(f"Model for {self.substance} has been saved")
-        return fulfillment
+        return fulfillment, model
 
 
 
