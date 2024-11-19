@@ -12,12 +12,12 @@ from data_preprocessing import data_preprocess
 # OUTPUT: symbolic regression model, figures, and csv files
 
 ###### Put the settings here ######
-FILE = 'all_add_features_manual_sampled_normalized'
-TEST_RATIO = 0.1
+FILE = 'all_add_features_manual_normalized_n'
+TEST_RATIO = 0.2
 ITERATION = 500
 MAXSIZE =35
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
-Loadingfrom = 'data_preprocess' # 'file' or 'data_preprocess'
+Loadingfrom = 'file' # 'file' or 'data_preprocess'
 ###### Load the data ######
 
 # Load data from file
