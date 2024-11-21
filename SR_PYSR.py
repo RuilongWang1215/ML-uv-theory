@@ -20,11 +20,11 @@ The naming convention is 'uv_trial_{substance}_{count}.csv'
 The count is the number of files with the same substance name'''
 
 class PYSR_wrapper():
-    def __init__(self, substance, X, y, test_ratio=0.2, iteration=100, MAXSIZE=35):
+    def __init__(self, substance, X, y, test_ratio=0.2, iteration=100, MAXSIZE=35,
+                 WEIGHTED=False):
         self.base_path = os.path.dirname(__file__)
         self.substance = substance
         self.model = None
-        self.NAME = 'pySR_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
         self.X_train = None
         self.X_test = None
         self.y_train = None
@@ -34,6 +34,10 @@ class PYSR_wrapper():
         self.maxsize = MAXSIZE
         self.X = X
         self.y = y
+        self.weighted = WEIGHTED
+        if self.weighted:
+            self.NAME = 'pySR_w_' + substance+ '_iter'+ str(iteration)
+        self.NAME = 'pySR_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
         
     def organize_files(self):
         if not os.path.exists(self.base_path+'/result_pysr'):
@@ -102,9 +106,15 @@ class PYSR_wrapper():
     
     def run_SR(self):
         self.data_split()
-        #unique_nu, counts = np.unique(self.X_train['nu'], return_counts=True)
-        #weights_dict = {nu: 1 / count for nu, count in zip(unique_nu, counts)}
-        #weights = np.array([weights_dict[nu] for nu in self.X_train['nu']])
+        if self.weighted:
+            unique_nu, counts = np.unique(self.X_train['nu'], return_counts=True)
+            weights_dict = {nu: 1 / count for nu, count in zip(unique_nu, counts)}
+            WEIGHT = np.array([weights_dict[nu] for nu in self.X_train['nu']])
+            ELEMENTWISE_LOSS = "loss(prediction, target, w) = w*(prediction - target)^2"
+        else:
+            WEIGHT = None
+            ELEMENTWISE_LOSS = "loss(prediction, target) = (prediction - target)^2"
+            
         #density = self.X_train['density']
         #weights = density/(10**(-16)+density**1.005)
         model = PySRRegressor(
@@ -131,24 +141,15 @@ class PYSR_wrapper():
                                 },
             complexity_of_operators={"sin": 3, "cos": 3, "tan":3
                                      ,"sinh":3,"cosh":3},
-            #elementwise_loss="loss(prediction, target, w) = w*(prediction - target)^2",
-            elementwise_loss="loss(prediction, target) = (prediction - target)^2",
-            #custom_loss=self.weighted_loss,
+            elementwise_loss=ELEMENTWISE_LOSS,
             ncycles_per_iteration = self.iteration,
             timeout_in_seconds = 60*60*8,
             model_selection='best',
-            #nested_constraints={
-            #    "tan": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
-            #    "sin": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
-            #    "cos": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
-            #    "exp": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
-            #    "log": {"tan": 2, "sin": 2, "cos": 2, "sinh":2,"cosh":2},
-            #},
             progress= True,
             batching = True,
             bumper = True,)  
-        model.fit(self.X_train, self.y_train)
-        self.model = model
+        
+        model.fit(self.X_train, self.y_train, weights=WEIGHT)
         #self.plot_regression()
         fulfillment= self.organize_files()
         print(f"Model for {self.substance} has been saved")
