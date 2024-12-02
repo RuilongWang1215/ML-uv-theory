@@ -1,0 +1,11 @@
+Complexity,Loss,Equation
+1,0.38771138,"0.80228543"
+2,0.2766495,"log(temperature)"
+3,0.17850894,"temperature + -1.0776194"
+4,0.13081703,"sqrt(temperature) - density"
+5,0.06545044,"(temperature - 0.5443285) - density"
+6,0.046011034,"cube(temperature / (density + 1.6340545))"
+7,0.035918888,"(temperature - 1.2844489) / (0.34276336 + density)"
+8,0.034973085,"square(temperature / (density + 1.317321)) + -0.37512496"
+9,0.032963954,"square((sqrt(density) - temperature) * -0.77097523) - 0.1558877"
+10,0.029302007,"cube(((temperature - density) + cube(cube(density))) / 1.6512656)"

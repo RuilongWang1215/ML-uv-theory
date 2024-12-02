@@ -36,8 +36,9 @@ class PYSR_wrapper():
         self.y = y
         self.weighted = WEIGHTED
         if self.weighted:
-            self.NAME = 'pySR_w_' + substance+ '_iter'+ str(iteration)
-        self.NAME = 'pySR_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
+            self.NAME = 'pySR_w_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
+        else:
+            self.NAME = 'pySR_' + substance+ '_iter'+ str(iteration)+ time.strftime("_%H%M")
         
     def organize_files(self):
         if not os.path.exists(self.base_path+'/result_pysr'):
@@ -150,6 +151,7 @@ class PYSR_wrapper():
             bumper = True,)  
         
         model.fit(self.X_train, self.y_train, weights=WEIGHT)
+        self.model = model
         #self.plot_regression()
         fulfillment= self.organize_files()
         print(f"Model for {self.substance} has been saved")

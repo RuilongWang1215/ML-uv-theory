@@ -16,18 +16,22 @@ from data_preprocessing import data_preprocess
 TEST_RATIO = 0.2
 ITERATION = 500
 MAXSIZE =35
-run_time = 10
 Algorithm = 'PYSR'   # 'DSO' or 'PYSR'
 Loadingfrom = 'file' # 'file' or 'data_preprocess'
 #stepwise = True
 ###### Load the data ######
-FILES = ['all_add_features_manual_normalized_n', 
-         'all_add_features_manual_normalized_n', 
-         'all_add_features_manual_normalized_n', 
-         'all_add_features_manual_normalized_n_filtered']
-stepwises= [False, False, True, False]
-WEIGHTEDs = [False, True, False, False]
+FILES = [#'all_add_features_manual_normalized_n', 
+         #'all_add_features_manual_normalized_n', 
+         'all_add_features_manual_normalized_n', ]
+         #'all_add_features_manual_normalized_n_filtered']
+stepwises= [#False, 
+            True ]
+            #False]
+WEIGHTEDs = [#True, 
+             #False, 
+             False]
 for FILE, stepwise, WEIGHTED in zip(FILES, stepwises, WEIGHTEDs):
+    run_time = 15
     print(f"FILE: {FILE}")
     print(f"stepwise: {stepwise}")
     print(f"WEIGHTED: {WEIGHTED}")
@@ -78,7 +82,7 @@ for FILE, stepwise, WEIGHTED in zip(FILES, stepwises, WEIGHTEDs):
             while run_time > 0:
                 ts = time.time()
                 pysr = PYSR_wrapper(substance=FILE, X=X, y=y, test_ratio=TEST_RATIO, 
-                                    iteration =ITERATION, MAXSIZE= MAXSIZE, weighted=WEIGHTED)
+                                    iteration =ITERATION, MAXSIZE= MAXSIZE, WEIGHTED=WEIGHTED)
                 fulfillment, model = pysr.run_SR()
                 te = time.time()
                 print(f'Time taken: {round((te-ts)/60, 2)} minutes')
@@ -104,14 +108,14 @@ for FILE, stepwise, WEIGHTED in zip(FILES, stepwises, WEIGHTEDs):
             y_second_0 = data_second['delta_phi']
             save_path = os.path.join(script_dir, 'result_pysr')
             while run_time > 0:
-                FILE_name_1 = FILE + '_'+str(run_time)+'a_'
+                FILE_name_1 = FILE + '_'+str(run_time)+'_a'
                 pysr_1 = PYSR_wrapper(substance=FILE_name_1, X=X_first, y=y_first, test_ratio=TEST_RATIO, 
                                     iteration =ITERATION, MAXSIZE= MAXSIZE)
                 fulfillment_1, model_1 = pysr_1.run_SR()
                 fulfillment_2 = False
                 while fulfillment_1 and not fulfillment_2:
                     y_second = model_1.predict(X_second)-y_second_0
-                    FILE_name_2 = FILE + '_'+str(run_time)+'w_'
+                    FILE_name_2 = FILE + '_'+str(run_time)+'_w'
                     pysr_2 = PYSR_wrapper(substance=FILE_name_2, X=X_second, y=y_second, test_ratio=TEST_RATIO, 
                                     iteration =ITERATION, MAXSIZE= 10)
                     fulfillment_2, model_2 = pysr_2.run_SR()
