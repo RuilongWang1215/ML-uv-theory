@@ -22,16 +22,16 @@ Loadingfrom = 'file' # 'file' or 'data_preprocess'
 ###### Load the data ######
 FILES = [#'all_add_features_manual_normalized_n', 
          #'all_add_features_manual_normalized_n', 
-         'all_add_features_manual_normalized_n', ]
-         #'all_add_features_manual_normalized_n_filtered']
+         #'all_add_features_manual_normalized_n', ]
+         'all_add_features_manual_normalized_n_filtered']
 stepwises= [#False, 
-            True ]
-            #False]
+            #True ]
+            False]
 WEIGHTEDs = [#True, 
              #False, 
              False]
 for FILE, stepwise, WEIGHTED in zip(FILES, stepwises, WEIGHTEDs):
-    run_time = 15
+    run_time = 3
     print(f"FILE: {FILE}")
     print(f"stepwise: {stepwise}")
     print(f"WEIGHTED: {WEIGHTED}")
@@ -117,14 +117,15 @@ for FILE, stepwise, WEIGHTED in zip(FILES, stepwises, WEIGHTEDs):
                     y_second = model_1.predict(X_second)-y_second_0
                     FILE_name_2 = FILE + '_'+str(run_time)+'_w'
                     pysr_2 = PYSR_wrapper(substance=FILE_name_2, X=X_second, y=y_second, test_ratio=TEST_RATIO, 
-                                    iteration =ITERATION, MAXSIZE= 10)
+                                    iteration =ITERATION, MAXSIZE= MAXSIZE)
                     fulfillment_2, model_2 = pysr_2.run_SR()
-                    if fulfillment_2 == True:
+                    if fulfillment_2:
                         run_time =run_time -1
+                        break
                     else:
                         run_time = run_time
-                else:
-                    run_time = run_time
+                    
+            
             te = time.time()
             print(f'Time taken: {round((te-ts)/60, 2)} minutes')
         

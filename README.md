@@ -5,7 +5,7 @@ This project focuses on using symbolic regression algorithms to develop interpre
 ## Table of Contents
 - [Data](#data)
   - [Raw Data](#raw-data)
-  - [Data Processing](#data-processing)
+  - [Processed data](#data-processing)
 - [Training](#training)
 - [Results](#results)
 - [Result Analysis](#result-analysis)
@@ -31,7 +31,7 @@ The script `data_preprocessing.py` handles these transformations and outputs the
 
 ## Training
 
-The main training script is `main.py`, where you can select different algorithms and configure training parameters, such as iteration, train_test_split ratio.
+The main training script is `main.py`, where you can select different algorithms and configure training parameters, such as iteration, train_test_split ratio, data used, training framework (standard or step-wise), and the number of trainings. After each training, `restriction.py` is used to check if the result fulfills the requirements, if no, the algorithm will repeat the training until all the requirements are fulfilled. You can adjust the restriction depending on your case.
 
 - **Algorithm Details**:
   - **PySR**: The settings for the PySR symbolic regression algorithm can be found in `SR_PYSR.py`.
