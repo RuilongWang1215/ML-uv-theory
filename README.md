@@ -1,6 +1,6 @@
 # ML-uv-theory
 
-This project focuses on using symbolic regression algorithms to develop interpretable predictive models for correction term of uv-theory, specifically using symbolic regression methods like PySR and DSO. 
+This project focuses on using symbolic regression algorithms to develop interpretable predictive models for correction term of uv-theory, specifically using symbolic regression methods like [PySR](https://github.com/MilesCranmer/PySR) and [DSO](https://github.com/dso-org/deep-symbolic-optimization). Note that to install the package of DSO, the python version cannot be higher than 3.6.
 
 ## Table of Contents
 - [Data](#data)
